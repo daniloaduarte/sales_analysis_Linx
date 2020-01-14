@@ -1,0 +1,73 @@
+import pandas as pd
+
+#1
+
+offsales = pd.read_json('offline_sales.json', lines = True)
+onorders = pd.read_json('online_orders.json', lines = True)
+onpageviews = pd.read_json('online_pageviews.json', lines = True)
+
+#2
+
+offsales.info()
+onorders.info()
+onpageviews.info()
+offsales.describe()
+onorders.describe()
+onpageviews.describe()
+
+#3
+
+sns.heatmap(offsales.isnull(), cbar=False)
+sns.heatmap(onorders.isnull(), cbar=False)
+sns.heatmap(onpageviews.isnull(), cbar=False)
+
+offsales['customer_id'].isnull().sum().sum()
+onorders['customer_id'].isnull().sum().sum()
+onpageviews['customer_id'].isnull().sum().sum()
+
+#4
+
+offsales['totalvaluesale'] = offsales['quantity'] * offsales['price']
+onorders['totalvaluesale'] = onorders['quantity'] * onorders['price']
+
+x = onorders['totalvaluesale'].sum()
+y = offsales['totalvaluesale'].sum()
+z = x + y
+z
+
+#5
+
+onbydate = onorders.groupby(['date']).sum().reset_index()
+offbydate = offsales.groupby(['date']).sum().reset_index()
+
+ond = sns.barplot(onbydate['date'],onbydate['totalvaluesale'])
+offd = sns.barplot(offbydate['date'],offbydate['totalvaluesale'])
+
+#6
+
+onorders.groupby(['on_product_id']).sum().sort_values(by=['quantity'], ascending = False)
+
+#7
+
+salesRJ = offsales[offsales['state'] == 'RJ']
+salesRJ['day_of_the_week'] = salesRJ['date'].dt.weekday_name
+dailysaleRJ = salesRJ.groupby('day_of_the_week').sum()
+
+import seaborn as sns
+dailysaleRJ = dailysaleRJ.reset_index().sort_values(by='quantity')
+ae = sns.barplot(dailysaleRJ['day_of_the_week'],dailysaleRJ['quantity'])
+
+#8
+
+onpageviewsc= onpageviews.dropna(subset=['customer_id'])
+onordersc = onorders.dropna(subset=['customer_id'])
+offsalesc = offsales.dropna(subset=['customer_id'])
+
+#9
+
+commoncustomers = pd.merge(onpageviewsc, offsalesc, how='inner', left_on='customer_id', right_on='customer_id')
+
+commoncustomers['customer_id'].nunique()
+onordersc['customer_id'].nunique()
+offsalesc['customer_id'].nunique()
+onpageviewsc['customer_id'].nunique()
